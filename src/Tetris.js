@@ -1,6 +1,6 @@
 import React, {useEffect, useReducer, useRef} from "react";
 
-const BRICKS = [      // 0 = EMPTY , 1..8 = index from COLORS. x, y dimension of the array must be the sama
+const BRICKS = [      // 0 = EMPTY , index 1..6 = COLOR[index]. x, y dimension of the array must be the same
   [ [1,1], [1,1] ],
   [ [2,2,0], [0,2,2], [0,0,0] ],
   [ [0,3,3], [3,3,0], [0,0,0] ],
@@ -91,14 +91,14 @@ function gameReducer(state, action) {
         let newBoard = [...state.board]
         for( let y=0; y<state.brick.length; y++) 
           for (let x=0; x<state.brick[y].length; x++) 
-            if (state.brick[y][x] !== 0) 
+            if (state.brick[y][x] !== EMPTY) 
               newBoard[y + state.position.y][x + state.position.x] = state.brick[y][x]
         // 2. clear completed rows
         let rowsToDelete = []
         for( let y=0; y<SIZE.Height; y++)         
           if (!newBoard[y].includes(EMPTY)) 
-            rowsToDelete.push(y)   // najit komplet obsazene radky a pridam je do seznamu radek ke smazani          
-        rowsToDelete.sort().reverse().forEach(rowToDelete => { newBoard.splice(rowToDelete,1) }); // mazu od konce, at se nepomichaji indexy radku
+            rowsToDelete.push(y)   // indexes of the rows to delete          
+        rowsToDelete.sort().reverse().forEach(rowToDelete => { newBoard.splice(rowToDelete,1) }); // deleting rows from the end to avoid unwanted rowindex change
         for (let i=0; i<rowsToDelete.length; i++) 
           newBoard.unshift(Array(SIZE.Width).fill(0))
         // 3. create the new block
@@ -144,7 +144,7 @@ export default function Tetris() {
       for( let yTetro=0; yTetro<state.brick.length; yTetro++) 
         for (let xTetro=0; xTetro<state.brick[yTetro].length; xTetro++)
           // check only 1 piece from the current falling brick - on the Y,X position of the board
-          if ( x === xTetro+state.position.x && y === yTetro+state.position.y && state.brick[yTetro][xTetro] !== 0) 
+          if ( x === xTetro+state.position.x && y === yTetro+state.position.y && state.brick[yTetro][xTetro] !== EMPTY) 
             draw[y][x] = <Box color={COLOR[state.brick[yTetro][xTetro]]} key={`${y}-${x}`} />
     }
     out.push(<div style={{display: 'block', lineHeight: 0}} key={y}>{[...draw[y]]}</div>)
