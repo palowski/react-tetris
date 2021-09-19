@@ -1,6 +1,6 @@
-## About
+## React Tetris
 
-super simple game written in React. Just for fun. 
+super simple game written in React. Just for fun.  
 
 ## Scripts
 
