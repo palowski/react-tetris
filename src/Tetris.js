@@ -17,7 +17,7 @@ const ACTION = {
   Move:             "MOVE",     // left+right
   TimeTick:         "TIMETICK"  // one step down 
 }
-const COLOR =       ["#eee","blue", "red", "green", "yellow", "magenta","orange", "violet", "grey"]
+const COLOR =       ["#eee","blue", "red", "green", "violet", "magenta","orange", "grey"]
 const SPEED =       300 // [ms]
 const EMPTY =       0
 const SIZE = {
@@ -130,22 +130,22 @@ export default function Tetris() {
   console.log(state)
 
   function handleGameAction(e) {
-    if ( [CONTROL.Left, CONTROL.Right, CONTROL.Rotate, CONTROL.Fall].includes(e.keyCode) ) {
+    if ( [CONTROL.Left, CONTROL.Right, CONTROL.Rotate].includes(e.keyCode) ) {
       e.preventDefault(); 
       dispatch({type: ACTION.Move, keyCode: e.keyCode}) }
   }
 
   let out = [], draw = []
-  for (let y=0; y<SIZE.Height;y++) {
+  for (let y=0; y<SIZE.Height; y++) {
     draw[y] = []
-    for (let x=0;x<SIZE.Width;x++) {
+    for (let x=0; x<SIZE.Width; x++) {
       draw[y][x] = <Box color={COLOR[state.board[y][x]]} key={`${y}-${x}`}/>
       // current falling brick
-      for( let yTetro=0; yTetro<state.brick.length; yTetro++) 
-        for (let xTetro=0; xTetro<state.brick[yTetro].length; xTetro++)
+      for( let yBrick=0; yBrick<state.brick.length; yBrick++) 
+        for (let xBrick=0; xBrick<state.brick[yBrick].length; xBrick++)
           // check only 1 piece from the current falling brick - on the Y,X position of the board
-          if ( x === xTetro+state.position.x && y === yTetro+state.position.y && state.brick[yTetro][xTetro] !== EMPTY) 
-            draw[y][x] = <Box color={COLOR[state.brick[yTetro][xTetro]]} key={`${y}-${x}`} />
+          if ( x === xBrick + state.position.x && y === yBrick + state.position.y && state.brick[yBrick][xBrick] !== EMPTY) 
+            draw[y][x] = <Box color={COLOR[state.brick[yBrick][xBrick]]} key={`${y}-${x}`} />
     }
     out.push(<div style={{display: 'block', lineHeight: 0}} key={y}>{[...draw[y]]}</div>)
   }
