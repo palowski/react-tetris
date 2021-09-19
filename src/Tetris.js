@@ -1,6 +1,6 @@
 import React, {useEffect, useReducer, useRef} from "react";
 
-const BRICKS = [      // 0 = nic/EMPTY , cislo = index barvy z COLORS. x a y rozmer pole kazde brick musi byt stejny
+const BRICKS = [      // 0 = EMPTY , 1..8 = index from COLORS. x, y dimension of the array must be the sama
   [ [1,1], [1,1] ],
   [ [2,2,0], [0,2,2], [0,0,0] ],
   [ [0,3,3], [3,3,0], [0,0,0] ],
@@ -14,8 +14,8 @@ const GAME_STATUS = {
 }
 const ACTION = {
   Restart:          "RESTART",
-  Move:             "MOVE",     // pohyb doleva/doprava
-  TimeTick:         "TIMETICK"  // pad kosticky z aktualni pozice az dolu
+  Move:             "MOVE",     // left+right
+  TimeTick:         "TIMETICK"  // one step down 
 }
 const COLOR =       ["#eee","blue", "red", "green", "yellow", "magenta","orange", "violet", "grey"]
 const SPEED =       300 // [ms]
@@ -44,14 +44,14 @@ function getInitialState() {
 function checkCollision(board, brick, position) {
   for( let y=0; y<brick.length; y++ )
     for (let x=0; x<brick[y].length; x++ )
-      // kolize vyhodnocuju POUZE v pripade, ze jsem na kousku brick. tj. nevyhodnucuju "vzduch" okolo
-      if ((brick[y][x] !== 0) && ( 
-          // 1. neprekroceni vodorovneho rozsahu (x)
+      // handle collision detection only when brick color is not transparent. 
+      if ((brick[y][x] !== EMPTY) && ( 
+          // 1. check horizontal limits (x)
           ( (x + position.x) < 0 || (x + position.x) >= SIZE.Width ) 
-          // 2. neprekroceni spodni hrany (y)
+          // 2. check bottom (y)
           || ( (y + position.y) >= SIZE.Height ) 
-          // 3. naraz do jiz polozenych kosticek - kontrola obsahu plochy ZA AKTUALNIM tetrominem. pokud uz tam neco je, pak nastala kolize
-          || ( (board[y + position.y][x + position.x]) !== 0 ) 
+          // 3. check board behind the actual brick's part
+          || ( (board[y + position.y][x + position.x]) !== EMPTY ) 
         )) return true
 }
 
@@ -82,19 +82,18 @@ function gameReducer(state, action) {
       }
       break
     case ACTION.TimeTick: 
-      // overim, jestli nasledna pozice neni v kolizi s jiz polozenymi kostickami
-      let newY = state.position.y + 1
+      let newY = state.position.y + 1   // computed next Y brick position
       if (checkCollision( state.board, state.brick, {x: state.position.x, y: newY} ) ) {
-        // 0. kontrola konce hry - pokud je kolize na vychozi pozici bricku. neresim krajni pripad, kdy novy brick narazi do svisle hranice
+        // 0. check end game - collision occur on the top of the board. dont't care about limit case, when the new brick might collide with left/right border 
         if (state.position.y === 0)
           return { ...state, status: GAME_STATUS.GameOver }
-        // 1. brick presunout do boardu
+        // 1. move brick to the board
         let newBoard = [...state.board]
         for( let y=0; y<state.brick.length; y++) 
           for (let x=0; x<state.brick[y].length; x++) 
             if (state.brick[y][x] !== 0) 
               newBoard[y + state.position.y][x + state.position.x] = state.brick[y][x]
-        // 2. vymazat plne radky
+        // 2. clear completed rows
         let rowsToDelete = []
         for( let y=0; y<SIZE.Height; y++)         
           if (!newBoard[y].includes(EMPTY)) 
@@ -102,7 +101,7 @@ function gameReducer(state, action) {
         rowsToDelete.sort().reverse().forEach(rowToDelete => { newBoard.splice(rowToDelete,1) }); // mazu od konce, at se nepomichaji indexy radku
         for (let i=0; i<rowsToDelete.length; i++) 
           newBoard.unshift(Array(SIZE.Width).fill(0))
-        // 3. vyrobit novy block
+        // 3. create the new block
         return { ... getInitialState(), board: newBoard}
       } else return {...state, position: {x: state.position.x, y: newY} }
     default:
@@ -140,12 +139,11 @@ export default function Tetris() {
   for (let y=0; y<SIZE.Height;y++) {
     draw[y] = []
     for (let x=0;x<SIZE.Width;x++) {
-      // implicitne vezmu varvu z brick jiz zafixovanych na desce
       draw[y][x] = <Box color={COLOR[state.board[y][x]]} key={`${y}-${x}`}/>
-      // vykresleni aktualne padajici kosticky
+      // current falling brick
       for( let yTetro=0; yTetro<state.brick.length; yTetro++) 
         for (let xTetro=0; xTetro<state.brick[yTetro].length; xTetro++)
-          // vyhodnocuju jen jedinou kosticku z prochazeneho brick - ta ktera je na pozici Y,X
+          // check only 1 piece from the current falling brick - on the Y,X position of the board
           if ( x === xTetro+state.position.x && y === yTetro+state.position.y && state.brick[yTetro][xTetro] !== 0) 
             draw[y][x] = <Box color={COLOR[state.brick[yTetro][xTetro]]} key={`${y}-${x}`} />
     }
