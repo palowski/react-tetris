@@ -1,6 +1,6 @@
 ## React Tetris
 
-super simple version of the classic game written in React. Just for fun.  
+super simple (160 lines of code) version of the classic game written in React. Just for fun.  
 
 ## Scripts
 
